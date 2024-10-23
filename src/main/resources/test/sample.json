@@ -1,0 +1,52 @@
+{
+  "operator" : "OR",
+  "nodeType" : "EXPRESSION",
+  "left" : {
+    "operator" : "AND",
+    "nodeType" : "EXPRESSION",
+    "left" : {
+      "condition" : {
+        "alias" : "A",
+        "lhs" : "age",
+        "evaluator" : "GT",
+        "dataType" : "NUM",
+        "rhs" : 30.0
+      },
+      "nodeType" : "VALUE"
+    },
+    "right" : {
+      "condition" : {
+        "alias" : "B",
+        "lhs" : "department",
+        "evaluator" : "EQ",
+        "dataType" : "STRING",
+        "rhs" : "Sales"
+      },
+      "nodeType" : "VALUE"
+    }
+  },
+  "right" : {
+    "operator" : "AND",
+    "nodeType" : "EXPRESSION",
+    "left" : {
+      "condition" : {
+        "alias" : "C",
+        "lhs" : "age",
+        "evaluator" : "LT",
+        "dataType" : "NUM",
+        "rhs" : 25.0
+      },
+      "nodeType" : "VALUE"
+    },
+    "right" : {
+      "condition" : {
+        "alias" : "D",
+        "lhs" : "department",
+        "evaluator" : "EQ",
+        "dataType" : "STRING",
+        "rhs" : "Marketing"
+      },
+      "nodeType" : "VALUE"
+    }
+  }
+}

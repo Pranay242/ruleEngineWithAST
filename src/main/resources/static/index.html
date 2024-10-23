@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeoTap Rule Engine with AST</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: auto;
+            flex-direction: column;
+        }
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #ruleInput {
+            height: 100px; /* Increased height for rule input */
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            width: 70%;
+        }
+        td {
+            width: 20%;
+        }
+        .delete-button {
+            background-color: #f44336;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<h1>ZeoTap Rule Engine with AST</h1>
+
+<!-- Existing form for data input -->
+<form id="dataForm">
+    <input type="number" id="ageInput" placeholder="Age" required />
+    <input type="text" id="departmentInput" placeholder="Department" required />
+    <input type="number" id="salaryInput" placeholder="Salary" required />
+    <input type="number" id="experienceInput" placeholder="Experience" required />
+    <button type="submit">Submit</button>
+</form>
+
+<!-- New section for inserting rules -->
+<h2>Insert New Rule</h2>
+<input type="text" id="ruleNameInput" placeholder="Rule Name" required />
+<input type="text" id="ruleInput" placeholder="E.g. - ((age > 30 AND department = 'Sales') OR (age < 25 AND department = 'Marketing')) AND (salary > 50000 OR experience > 5)" required style="height: 100px;" />
+<button id="insertRuleButton">Insert Rule</button>
+<div id="errorMessage" class="error"></div>
+
+<!-- Table to display existing rules -->
+<h2>Available Rules</h2>
+<table id="rulesTable">
+    <thead>
+    <tr>
+        <th>Rule</th>
+        <th>Rule Name</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody id="rulesBody"></tbody>
+</table>
+
+<script>
+    document.getElementById('dataForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Gather input data
+        const age = document.getElementById('ageInput').value;
+        const department = document.getElementById('departmentInput').value;
+        const salary = document.getElementById('salaryInput').value;
+        const experience = document.getElementById('experienceInput').value;
+
+        // Create data object
+        const dataToSend = JSON.stringify({
+            age: age,
+            department: department,
+            salary: salary,
+            experience: experience
+        });
+
+        fetch('/api/rules/check', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: dataToSend,
+})
+.then(response => response.text()) // Change to response.text() to get the raw response
+.then(data => {
+    alert('Result: ' + data); // Alert the response snippet
+})
+.catch((error) => {
+    console.error('Error:', error);
+    alert('An error occurred while submitting data.');
+});
+
+    });
+
+    // Function to fetch and display rules
+    function fetchRules() {
+        fetch('/api/rules/all')
+            .then(response => response.json())
+            .then(rules => {
+                const rulesBody = document.getElementById('rulesBody');
+                rulesBody.innerHTML = ''; // Clear existing rules
+                rules.forEach(rule => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${rule.ruleAsStr}</td>
+                        <td>${rule.ruleName}</td>
+                        <td><button class="delete-button" onclick="deleteRule('${rule.uniqueId}')">Delete</button></td>
+                    `;
+                    rulesBody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error fetching rules:', error));
+    }
+
+    // Insert new rule
+    document.getElementById('insertRuleButton').addEventListener('click', function() {
+        const ruleName = document.getElementById('ruleNameInput').value;
+        const ruleString = document.getElementById('ruleInput').value;
+
+        fetch('/api/rules/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ ruleName: ruleName, ruleAsStr: ruleString }),
+        })
+        .then(response => {
+            if (response.ok) {
+                document.getElementById('errorMessage').innerText = '';
+                document.getElementById('ruleNameInput').value = '';
+                document.getElementById('ruleInput').value = '';
+                fetchRules(); // Refresh the rules list
+            } else {
+                return response.text().then(text => {
+                    document.getElementById('errorMessage').innerText = text;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('errorMessage').innerText = 'An error occurred while inserting the rule.';
+        });
+    });
+
+    // Delete a rule
+    function deleteRule(uniqueId) {
+        fetch(`/api/rules/delete/${uniqueId}`, {
+            method: 'DELETE',
+        })
+        .then(response => {
+            if (response.ok) {
+                fetchRules(); // Refresh the rules list after deletion
+            } else {
+                console.error('Error deleting rule:', response.statusText);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }
+
+    // Fetch rules on page load
+    fetchRules();
+</script>
+</body>
+</html>
