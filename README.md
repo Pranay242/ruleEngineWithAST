@@ -103,6 +103,7 @@ The `RulesApp1` collection stores all available rules like below
    
    Please provide above details about your mongodb. Please create the db if not created.
    
-   URL to open the application - your-host-ip:8080/ (localhost:8080/)
+   ## Start the server from this class com.RuleEngineWithAST.ruleEngineWithAST.RuleEngineWithAstApplication
+   ## URL to open the application - your-host-ip:8080/ (localhost:8080/)
      ```
    
